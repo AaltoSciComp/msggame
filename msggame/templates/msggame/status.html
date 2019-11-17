@@ -2,8 +2,12 @@
 
 {% block body %}
 
+<table>
 {% for person in people %}
-   {{ person }}
+   <tr>
+   <td>{{ person.name }}<td>
+   </tr>
 {% endfor %}
+</table>
 
 {% endblock %}

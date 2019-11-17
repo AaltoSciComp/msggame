@@ -7,6 +7,12 @@ class Person(models.Model):
     centrality = models.FloatField(default=0)
     score = models.FloatField(default=0)
 
+    def add_link(self, destination):
+        link = Link(generation=1,
+                    source=self,
+                    destination=destination)
+        link.save()
+
 class Link(models.Model):
     generation = models.IntegerField()
     source = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='link_sources')
