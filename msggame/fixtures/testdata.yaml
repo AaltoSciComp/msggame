@@ -16,3 +16,12 @@
     name: C
     secret_pin: 3
     public_pin: 33
+
+
+- model: msggame.message
+  pk: 1
+  fields:
+    origin: 1
+    target: 3
+    current_holder: 1
+
