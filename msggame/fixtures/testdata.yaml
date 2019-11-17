@@ -1,0 +1,8 @@
+- model: msggame.person
+  pk: 1
+  fields:
+    name: A
+- model: msggame.person
+  pk: 2
+  fields:
+    name: B
