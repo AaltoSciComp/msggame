@@ -147,7 +147,7 @@ class Game(models.Model):
 
     @staticmethod
     def round_class():
-        Round.objects.get(round=current_round())
+        return Round.objects.get(round=current_round())
 
 
 

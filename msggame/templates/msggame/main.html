@@ -29,7 +29,7 @@
 <h3>Current game rules</h3>
 <p>
   <ol>
-    {% if round.send_messages %}           <li>send messages to someone, to try to get them to their destination as fast as possible.  </li>{% endif %}
+    {% if round.send_messages %}           <li>Send messages to people to try to get them to their destination in as few hops as possible.  </li>{% endif %}
     {% if round.allow_new_links %}         <li>You are allowed to make new links.  </li>{% endif %}
     {% if round.require_links %}           <li>You can only send messages over existing links. </li>{% endif %}
     {% if round.max_links %}               <li>Max of {{round.max_links}} links.  </li>{% endif %}

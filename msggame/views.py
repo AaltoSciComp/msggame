@@ -21,6 +21,8 @@ class LinkForm(forms.Form):
 
 def index(request):
     context = { }
+    round = context['round'] = models.Game.round_class()
+    print(round)
 
     # Login handling
     if request.method == 'POST':
