@@ -1,4 +1,7 @@
+import re
+
 from django.db import models
+from django.db.models import F
 
 def current_generation():
     game = Game.objects.first()
@@ -12,10 +15,14 @@ def random_person():
 
 class Person(models.Model):
     name = models.CharField(max_length=200)
+    description = models.CharField(max_length=50, null=True, blank=True)
     secret_pin = models.IntegerField(null=True, blank=True)
-    public_pin = models.IntegerField(null=True, blank=True)
+    pin = models.IntegerField(null=True, blank=True)
     centrality = models.FloatField(default=0)
     score = models.FloatField(default=0)
+    consent_research = models.BooleanField(default=False)
+    consent_research_withname = models.BooleanField(default=False)
+    consent_research_open = models.BooleanField(default=False)
 
     def add_link(self, destination):
         link = Link(generation=1,
@@ -37,8 +44,23 @@ class Person(models.Model):
 
     @property
     def active_messages(self):
-        messages = self.current_messages.filter(status='Active')
+        messages = self.current_messages.filter(status='Active', generation=current_generation())
         return messages
+
+    @property
+    def completed_messages(self):
+        messages = Message.objects.filter(origin=self, status='Completed', generation=current_generation())
+        return messages
+
+    @property
+    def current_links(self):
+        links = self.link_sources.filter(generation=current_generation())
+        return links
+
+    @property
+    def all_links(self):
+        links = self.link_sources.filter()
+        return links
 
 class Link(models.Model):
     generation = models.IntegerField(default=current_generation)
@@ -58,7 +80,7 @@ class Message(models.Model):
     ts_last = models.DateTimeField(auto_now=True, null=True)
     ts_received = models.DateTimeField(blank=True, null=True)
     relays = models.IntegerField(default=0)
-    path = models.TextField(default="")
+    path_ids = models.TextField(default="")
 
     @classmethod
     def new(cls, origin, target):
@@ -68,7 +90,7 @@ class Message(models.Model):
     def relay(self, destination):
         """Send this message on to the next person"""
         relay = Relay(source=self.current_holder, destination=destination, message=self)
-        self.path += str(self.current_holder.id) + ';'
+        self.path_ids += str(self.current_holder.id) + ';'
         self.current_holder = destination
         self.relays += 1
         relay.save()
@@ -77,14 +99,27 @@ class Message(models.Model):
         if self.current_holder == self.target:
             self.status = 'Completed'
             score = 128
-            import re
             #for person_id in reversed(self.path.split(';')):
-            for person_id in reversed(re.split(',|;', self.path)):
-                if not person_id: continue
-                p = Person.objects.get(id=int(person_id))
-                p.score += score
+            for p in reversed(self.path()):
+                if p == self.target:
+                    continue
+                p.score = F('score') + score
                 score /= 2
-            self.origin.score += 128
+                p.save()
+            self.origin.score = F('score') + 128
+            self.origin.save()
+            self.save()
+
+    def path(self):
+        if not self.path_ids:
+            return [ ]
+        path = [ ]
+        for person_id in re.split(',|;', self.path_ids):
+            if not person_id:
+                continue
+            p = Person.objects.get(id=int(person_id))
+            path.append(p)
+        return path
 
 
 class Relay(models.Model):
@@ -96,3 +131,16 @@ class Relay(models.Model):
 
 class Game(models.Model):
     generation = models.IntegerField(default=0)
+
+    @staticmethod
+    def generation_class():
+        Generation.getcurrent_generation()
+
+class Generation(models.Model):
+    generation = models.IntegerField(unique=True)
+    max_links = models.IntegerField(default=10)
+    allow_new_links = models.BooleanField(default=True)
+    disallow_existing_links = models.BooleanField(default=False)
+    require_links = models.BooleanField(default=False)
+    links_from_relays = models.BooleanField(default=True)
+    auto_create_messages = models.BooleanField(default=True)

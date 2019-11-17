@@ -3,19 +3,19 @@
   fields:
     name: A
     secret_pin: 1
-    public_pin: 11
+    pin: 11
 - model: msggame.person
   pk: 2
   fields:
     name: B
     secret_pin: 2
-    public_pin: 22
+    pin: 22
 - model: msggame.person
   pk: 3
   fields:
     name: C
     secret_pin: 3
-    public_pin: 33
+    pin: 33
 
 
 - model: msggame.message

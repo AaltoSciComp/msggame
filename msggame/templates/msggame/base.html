@@ -1,9 +1,18 @@
+{% load static %}
 <html>
   <head>
     <title>msggame</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'bootstrap-3.3.7-dist/css/bootstrap.min.css' %}">
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      {% block css %}{% endblock %}
+    </style>
   </head>
   <body>
-    {% block body %}
-    {% endblock %}
+    <div class="container">
+      {% block body %}
+      {% endblock %}
+    </div>
   </body>
 </html>

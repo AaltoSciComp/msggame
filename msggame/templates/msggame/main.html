@@ -5,20 +5,18 @@
 
 
 {% if messages %}
-<ul class="messages">
     {% for message in messages %}
-    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags %}{{ message.tags }}{% endif %}">{{message}}</div>
     {% endfor %}
-</ul>
 {% endif %}
 
 
-{{ user }}
+
 {% if user is None %}
 <form method="post">
   {% csrf_token %}
   Please enter your secret PIN (back of your badge) to login: <br>
-  <input id="pin" type="number" name="pin" size="6" maxlength="6" required>
+  <input id="login_pin" type="number" name="login_pin" size="6" maxlength="6" required>
   <input type="submit" name="submit" value="Login">
 </form>
 
@@ -26,25 +24,54 @@
 
 {% else %}
 
-<p>Welcome, {{ user.name }}.  Score={{ user.score }}.  Completed messages= Relays=</p>
+<p>Welcome, {{ user.name }} ({{ user }}).  Score={{ user.score }}.  Completed messages={{user.completed_messages|length}} Relays=</p>
 
 <form method="post">
   {% csrf_token %}
 
-<p>Your active messages:</p>
+<h3>Your active messages</h3>
 <ul>
-  {% for message in user.active_messages %}
+  {% for msg in user.active_messages %}
   <li>
-    target={{ message.target.name}}
-    path={{ message.path }}
-    <input id="send_{{message.id}}" type="number" name="send_{{message.id}}" size="6" maxlength="6">
+    target={{ msg.target.name}}
+    path={{ msg.path_ids }}
+    status={{ msg.status }}
+    <input id="send_{{msg.id}}" type="number" name="send_{{msg.id}}" size="6" maxlength="6">
   </li>
   {% endfor%}
 </ul>
-  <input type="submit" name="submit" value="Send them">
+<input type="submit" name="submit" value="Send">
 </form>
 
+<h3>Your current links</h3>
+<p>
+  You can currently send messages to:
+  <ol>
+    {% for link in user.current_links %}
+    <li>{{link.destination.name}} {% if p.hint%}({{link.destination.hint}}){% endif %}</li>
+    {% endfor %}
+  </ol>
+</p>
 
+<p>
+  <form method="post">
+    {% csrf_token %}
+    Add a new link to: <br>
+  <input id="link_pin" type="number" name="link_pin" size="6" maxlength="6" required>
+  <input type="submit" name="submit" value="Link">
+</form>
+</p>
+
+
+
+<h3>Completed messages for this generation</h3>
+<p>
+  <ol>
+    {% for msg in user.completed_messages %}
+    <li>You->{{msg.target.name}}, path={% for p in msg.path %}{{p.name}},{% endfor%}</li>
+    {% endfor %}
+  </ol>
+</p>
 
 
 {% endif %}
