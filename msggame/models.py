@@ -18,6 +18,8 @@ def random_person():
     p = Person.objects.order_by('?').first()
     return p
 
+
+
 class Person(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=50, null=True, blank=True)
@@ -68,6 +70,8 @@ class Person(models.Model):
         links = self.link_sources.filter()
         return links
 
+
+
 class Link(models.Model):
     round = models.IntegerField(default=current_round)
     source = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='link_sources')
@@ -75,6 +79,8 @@ class Link(models.Model):
     ts_create = models.DateTimeField(auto_now_add=True)
     ts_used = models.DateTimeField(auto_now=True)
     nuses = models.IntegerField(default=0)
+
+
 
 class Message(models.Model):
     round = models.IntegerField(default=current_round)
@@ -98,6 +104,25 @@ class Message(models.Model):
         if destination == self.current_holder:
             LOG.info("Atempting to send message to yourself")
             return
+
+        # If disallow_existing_links, don't allow to send to anyone
+        # they have linked with.
+        link_qs = Link.objects.filter(source=self.current_holder, destination=destination)
+        if Game.round_class().disallow_existing_links:
+            if link_qs.exists():
+                return
+
+        # If require_links, expect a link this round
+        link_qs_cur = link_qs.filter(round=current_round())
+        if Game.round_class().require_links and not link_qs_cur.exists():
+            return
+
+        # If links_from_relays, add a link for this
+        if Game.round_class().links_from_relays:
+            if not link_qs_cur.exists():
+                link = Link(source=self.current_holder, destination=destination)
+                link.save()
+
         relay = Relay(source=self.current_holder, destination=destination, message=self)
         self.path_ids += str(self.current_holder.id) + ';'
         self.current_holder = destination
@@ -108,17 +133,20 @@ class Message(models.Model):
         # Check if we have reached our destination
         if self.current_holder == self.target:
             self.status = 'Completed'
-            score = 1000
+            BASE_SCORE = 1000
+            score = BASE_SCORE
             #for person_id in reversed(self.path.split(';')):
-            for p in reversed(self.path()):
+            for p in reversed(self.path()[1:]):
                 if p == self.target:
                     continue
                 p.score = F('score') + int(score)
-                score /= 1.5
                 p.save()
+                score /= 1.5
+            # remaining score
             self.origin.score = F('score') + int(score)
             self.origin.save()
             self.save()
+        return True
 
     def path(self):
         if not self.path_ids:

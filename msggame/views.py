@@ -8,6 +8,7 @@ from django.template.response import TemplateResponse
 from django.utils import timezone
 
 from . import models
+from . import network
 
 LOG = logging.getLogger(__name__)
 
@@ -22,7 +23,6 @@ class LinkForm(forms.Form):
 def index(request):
     context = { }
     round = context['round'] = models.Game.round_class()
-    print(round)
 
     # Login handling
     if request.method == 'POST':
@@ -52,7 +52,7 @@ def index(request):
 
 
     # See if any messages need sending
-    if request.method == 'POST' and user:
+    if request.method == 'POST' and user and round.send_messages:
         for key, value in request.POST.items():
             if not key.startswith('send_'):
                 continue
@@ -70,29 +70,37 @@ def index(request):
                 messages.add_message(request, messages.WARNING, "Unknown receiver ID: %s"%destination_id)
                 continue
             destination = qs.get()
-            msg.relay(destination)
-            LOG.info(key)
+            ret = msg.relay(destination)
+            if ret is True:
+                messages.add_message(request, messages.INFO, "Your message was sent.")
+
 
     # Trying to make a new link?
-    if request.method == 'POST':
+    if request.method == 'POST' and round.allow_new_links:
         link_form = LinkForm(request.POST)
         if link_form.is_valid():
-            LOG.info('logging in')
-            pin = link_form.cleaned_data['link_pin']
-            qs = models.Person.objects.filter(pin=pin)
-            if qs.count() != 1:
-                messages.add_message(request, messages.WARNING, "Unknown linkee ID: %s"%pin)
+            LOG.info('making a link')
+            # Are they at the max number of links?
+            cur_links = models.Link.objects.filter(round=models.current_round(), source=user)
+            if round.max_links and cur_links.count() > round.max_links:
+                messages.add_message(request, messages.WARNING, "You are at your maximum number of links for this round")
             else:
-                other = qs.get()
-                if models.Link.objects.filter(source=user, destination=other).count() > 0:
-                    messages.add_message(request, messages.WARNING, "You can't make another link with someone you've already linked to.")
+                # Create the link
+                pin = link_form.cleaned_data['link_pin']
+                qs = models.Person.objects.filter(pin=pin)
+                if qs.count() != 1:
+                    messages.add_message(request, messages.WARNING, "Unknown linkee ID: %s"%pin)
                 else:
-                    link = models.Link(source=user, destination=other)
-                    link.save()
-                    messages.add_message(request, messages.INFO, "You've linked to %s."%other.name)
+                    other = qs.get()
+                    if models.Link.objects.filter(source=user, destination=other).count() > 0:
+                        messages.add_message(request, messages.WARNING, "You can't make another link with someone you've already linked to.")
+                    else:
+                        link = models.Link(source=user, destination=other)
+                        link.save()
+                        messages.add_message(request, messages.INFO, "You've linked to %s."%other.name)
 
     # Make new messages if none right now
-    if user:
+    if user and round.auto_create_messages:
         user.auto_make_messages()
 
 
@@ -106,3 +114,9 @@ def status(request):
     context = { }
     context['people'] = models.Person.objects.all()
     return TemplateResponse(request, 'msggame/status.html', context)
+
+def view_network(request):
+    G = network.get_network()
+    return HttpResponse('\n'.join("%s %s"%(a,b) for (a,b) in G.edges()),
+                        content_type='text/plain')
+    #return TemplateResponse(request, 'msggame/status.html', context)
