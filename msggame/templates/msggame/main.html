@@ -1,0 +1,37 @@
+{% extends "msggame/base.html" %}
+
+{% block body %}
+
+
+
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+
+
+
+{% if not user %}
+<form method="post">
+  {% csrf_token %}
+  Please enter your secret PIN (back of your badge) to login: <br>
+  <input id="pin" type="text" name="pin" maxlength="10" required>
+  <input type="submit" name="submit" value="Login">
+</form>
+
+
+
+{% else %}
+
+
+
+Welcome, {{ user.name }}.<br>
+
+
+
+{% endif %}
+
+{% endblock %}
