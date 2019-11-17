@@ -13,12 +13,12 @@
 {% endif %}
 
 
-
-{% if not user %}
+{{ user }}
+{% if user is None %}
 <form method="post">
   {% csrf_token %}
   Please enter your secret PIN (back of your badge) to login: <br>
-  <input id="pin" type="text" name="pin" maxlength="10" required>
+  <input id="pin" type="number" name="pin" size="6" maxlength="6" required>
   <input type="submit" name="submit" value="Login">
 </form>
 
@@ -26,9 +26,24 @@
 
 {% else %}
 
+<p>Welcome, {{ user.name }}.  Score={{ user.score }}.  Completed messages= Relays=</p>
 
+<form method="post">
+  {% csrf_token %}
 
-Welcome, {{ user.name }}.<br>
+<p>Your active messages:</p>
+<ul>
+  {% for message in user.active_messages %}
+  <li>
+    target={{ message.target.name}}
+    path={{ message.path }}
+    <input id="send_{{message.id}}" type="number" name="send_{{message.id}}" size="6" maxlength="6">
+  </li>
+  {% endfor%}
+</ul>
+  <input type="submit" name="submit" value="Send them">
+</form>
+
 
 
 

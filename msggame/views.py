@@ -39,10 +39,35 @@ def index(request):
 
     # Chck log in
     user_id = context['user_id'] = request.session.get('user_id', None)
+    user = context['user'] = None
     if user_id:
-        context['user'] = models.Person.objects.get(id=user_id)
+        user = context['user'] = models.Person.objects.get(id=user_id)
         messages.add_message(request, messages.WARNING, 'user=%s'%context['user'])
 
+    # See if any messages need sending
+    if request.method == 'POST' and user:
+        for key, value in request.POST.items():
+            if not key.startswith('send_'):
+                continue
+            if not value:
+                continue
+            msg_id = int(key.rsplit('_',1)[1])
+            msg = models.Message.objects.get(id=msg_id)
+            if msg.current_holder != user:
+                LOG.error("User trying to send message that isn't theirs: %s, %s"%(user, msg))
+                continue
+            destination_id = int(value)
+            qs = models.Person.objects.filter(public_pin=destination_id)
+            if qs.count() != 1:
+                messages.add_message(request, messages.WARNING, "Unknown receiver ID: %s"%destination_id)
+                continue
+            destination = qs.get()
+            msg.relay(destination)
+            print(key)
+
+    # Make new messages if none right now
+    if user:
+        user.auto_make_messages()
 
 
 
