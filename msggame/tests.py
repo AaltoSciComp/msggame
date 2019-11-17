@@ -1,4 +1,4 @@
-from django.test import TestCase
+from django.test import Client, TestCase
 
 from . import models
 from .models import Person, Message, Link, Relay
@@ -22,3 +22,13 @@ class Tests(TestCase):
         assert m1.current_holder == b
         assert m1.relays == 1
 
+
+    def test_login(self):
+        c = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        c.get('/')
+        assert c.session.get('user_id') is None
+        c.post('/', {'pin': '1'})
+        assert c.session['user_id'] == 1
+
+        c.post('/', {'pin': '-50'})
+        assert c.session['user_id'] is None

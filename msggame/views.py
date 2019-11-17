@@ -32,14 +32,17 @@ def index(request):
                 messages.add_message(request, messages.INFO, 'Logged in')
             else:
                 messages.add_message(request, messages.WARNING, 'Wrong login PIN')
+                request.session['user_id'] = None
     else:
         login_form = LoginForm()
     context['login_form'] = login_form
 
     # Chck log in
     user_id = context['user_id'] = request.session.get('user_id', None)
-    context['user'] = models.Person.objects.get(id=user_id)
-    messages.add_message(request, messages.WARNING, 'user=%s'%context['user'])
+    if user_id:
+        context['user'] = models.Person.objects.get(id=user_id)
+        messages.add_message(request, messages.WARNING, 'user=%s'%context['user'])
+
 
 
 
