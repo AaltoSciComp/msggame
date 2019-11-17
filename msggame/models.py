@@ -10,10 +10,9 @@ LOG = logging.getLogger(__name__)
 def current_round():
     game = Game.objects.first()
     if game is None:
-        return 0
+        return 1
     else:
-        game.round
-current_generation = current_round
+        return game.round
 
 def random_person():
     p = Person.objects.order_by('?').first()
@@ -51,17 +50,17 @@ class Person(models.Model):
 
     @property
     def active_messages(self):
-        messages = self.current_messages.filter(status='Active', round=current_round)
+        messages = self.current_messages.filter(status='Active', round=current_round())
         return messages
 
     @property
     def completed_messages(self):
-        messages = Message.objects.filter(origin=self, status='Completed', round=current_round)
+        messages = Message.objects.filter(origin=self, status='Completed', round=current_round())
         return messages
 
     @property
     def current_links(self):
-        links = self.link_sources.filter(round=current_round)
+        links = self.link_sources.filter(round=current_round())
         return links
 
     @property

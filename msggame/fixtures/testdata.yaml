@@ -34,4 +34,6 @@
 - model:  msggame.round
   pk: 1
   fields:
+    round: 1
+
 
