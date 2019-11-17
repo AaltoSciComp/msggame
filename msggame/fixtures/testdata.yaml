@@ -18,10 +18,20 @@
     pin: 33
 
 
-- model: msggame.message
+- model:  msggame.message
   pk: 1
   fields:
     origin: 1
     target: 3
     current_holder: 1
+
+
+- model:  msggame.game
+  pk: 1
+  fields:
+    round: 1
+
+- model:  msggame.round
+  pk: 1
+  fields:
 

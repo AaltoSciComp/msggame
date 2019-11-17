@@ -29,7 +29,7 @@ class ViewTests(TestCase):
 
     def test_login(self):
         """Test logging in"""
-        c = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        c = Client()
         c.get('/')
         assert c.session.get('user_id') is None
         c.post('/', {'login_pin': '1'})
@@ -41,7 +41,7 @@ class ViewTests(TestCase):
     def test_sending(self):
         """Test login and sending the pre-made message"""
         # Login
-        c = Client(HTTP_USER_AGENT='Mozilla/5.0')
+        c = Client()
         c.post('/', {'login_pin': '1'})
         response = c.get('/')
         # Test that the message defined in testdata.yaml is there
@@ -52,5 +52,20 @@ class ViewTests(TestCase):
         assert response.status_code in {200, 302}
         assert 'send_1' not in response.content.decode()
 
+    def test_linking(self):
+        """Test login and sending the pre-made message"""
+        # Login
+        c = Client()
+        c.post('/', {'login_pin': '1'})
+        response = c.get('/')
+        # Test that the message defined in testdata.yaml is there
+        assert response.status_code == 200
+        a = Person.objects.get(name='A')
+        b = Person.objects.get(name='B')
+        assert Link.objects.filter(source=a, destination=b).count() == 0
+        # Try to make the link
+        response = c.post('/', {'link_pin': '22'})
+        # Did link work?
+        assert Link.objects.filter(source=a, destination=b).count() == 1
 
 

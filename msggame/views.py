@@ -1,13 +1,13 @@
 import logging
 
 from django import forms
+from django.contrib import messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.template.response import TemplateResponse
-from django.contrib import messages
+from django.utils import timezone
+
 from . import models
-
-
 
 LOG = logging.getLogger(__name__)
 
@@ -45,6 +45,9 @@ def index(request):
     if user_id:
         user = context['user'] = models.Person.objects.get(id=user_id)
         #messages.add_message(request, messages.WARNING, 'user=%s'%context['user'])
+        user.ts_lastactive = timezone.now()
+        user.save()
+
 
     # See if any messages need sending
     if request.method == 'POST' and user:
