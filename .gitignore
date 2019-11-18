@@ -4,3 +4,4 @@
 /db.sqlite3
 /msggame_site/settings_local.py
 /msggame/static/bootstrap-3.3.7-dist*
+*.csv

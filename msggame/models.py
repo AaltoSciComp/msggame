@@ -76,6 +76,9 @@ class Link(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['source', 'destination']),
+            ]
+        unique_together = [
+            ['round', 'source', 'destination']
         ]
     round = models.IntegerField(default=current_round)
     source = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='link_sources')
@@ -192,6 +195,8 @@ class Game(models.Model):
 
 
 class Round(models.Model):
+    class Meta:
+        get_latest_by = 'round'
     round = models.IntegerField(unique=True)
     send_messages = models.BooleanField(default=True)
     max_links = models.IntegerField(default=10)
