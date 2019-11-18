@@ -81,7 +81,7 @@
 <p>
   <form method="post">
     {% csrf_token %}
-    Add a new link to: <br>
+    Add a new outgoing connection to:
   <input id="link_pin" type="number" name="link_pin" size="6" maxlength="6" required>
   <input type="submit" name="submit" value="Link">
 </form>
@@ -94,7 +94,7 @@
 <p>
   <ol>
     {% for msg in user.completed_messages %}
-    <li>You->{{msg.target.name}}, path={% for p in msg.path %}{{p.name}},{% endfor%}</li>
+    <li>You→{{msg.target.name}}, path={% for p in msg.path %}{{p.name}}→{% endfor%}{{msg.target.name}}</li>
     {% endfor %}
   </ol>
 </p>

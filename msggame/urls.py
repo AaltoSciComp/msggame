@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path(r'status/', views.status, name='status'),
-    path(r'network/', views.view_network, name='network'),
+    path(r'network/digraph', views.network_digraph, name='network_digraph'),
+    path(r'network/stats', views.network_stats, name='network_stats'),
     path(r'', views.index, name='index'),
 ]

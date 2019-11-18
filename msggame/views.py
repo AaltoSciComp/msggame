@@ -1,4 +1,5 @@
 import logging
+import networkx
 
 from django import forms
 from django.contrib import messages
@@ -115,8 +116,24 @@ def status(request):
     context['people'] = models.Person.objects.all()
     return TemplateResponse(request, 'msggame/status.html', context)
 
-def view_network(request):
+def network_digraph(request):
     G = network.get_network()
     return HttpResponse('\n'.join("%s %s"%(a,b) for (a,b) in G.edges()),
+                        content_type='text/plain')
+
+def network_temporal(request):
+    G = network.get_network()
+    return HttpResponse('\n'.join("%s %s"%(a,b) for (a,b) in G.edges()),
+                        content_type='text/plain')
+
+def network_stats(request):
+    G = network.get_network()
+    lines = [ ]
+    for funcname in ['degree_centrality',
+                     'in_degree_centrality',
+                     'out_degree_centrality',
+                     'betweenness_centrality']:
+        lines.append("%s: %s"%(funcname, getattr(networkx, funcname)(G)))
+    return HttpResponse('\n'.join(lines),
                         content_type='text/plain')
     #return TemplateResponse(request, 'msggame/status.html', context)
