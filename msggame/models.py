@@ -21,10 +21,10 @@ def random_person():
 
 
 class Person(models.Model):
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200, unique=True)
     description = models.CharField(max_length=50, null=True, blank=True)
-    secret_pin = models.IntegerField(null=True, blank=True)
-    pin = models.IntegerField(null=True, blank=True)
+    secret_pin = models.IntegerField(null=True, blank=True, unique=True)
+    pin = models.IntegerField(null=True, blank=True, unique=True)
     centrality = models.FloatField(default=0)
     score = models.FloatField(default=0)
     consent_research = models.BooleanField(default=False)
@@ -73,6 +73,10 @@ class Person(models.Model):
 
 
 class Link(models.Model):
+    class Meta:
+        indexes = [
+            models.Index(fields=['source', 'destination']),
+        ]
     round = models.IntegerField(default=current_round)
     source = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='link_sources')
     destination = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='link_destinations')
@@ -83,6 +87,10 @@ class Link(models.Model):
 
 
 class Message(models.Model):
+    class Meta:
+        indexes = [
+            models.Index(fields=['origin', 'target']),
+        ]
     round = models.IntegerField(default=current_round)
     origin = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='message_origins')
     target = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='message_targets')
@@ -162,6 +170,10 @@ class Message(models.Model):
 
 
 class Relay(models.Model):
+    class Meta:
+        indexes = [
+            models.Index(fields=['source', 'destination']),
+        ]
     round = models.IntegerField(default=current_round)
     source = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='relay_source')
     destination = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='relay_destination')
