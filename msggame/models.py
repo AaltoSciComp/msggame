@@ -1,8 +1,10 @@
+import datetime
 import logging
 import re
 
 from django.db import models
 from django.db.models import F
+from django.utils import timezone
 
 LOG = logging.getLogger(__name__)
 
@@ -14,8 +16,11 @@ def current_round():
     else:
         return game.round
 
-def random_person():
-    p = Person.objects.order_by('?').first()
+def random_person(age=None):
+    qs = Person.objects
+    if age:
+        qs = qs.filter(ts_lastactive__gt=timezone.now()-datetime.timedelta(seconds=age))
+    p = qs.order_by('?').first()
     return p
 
 
@@ -42,13 +47,19 @@ class Person(models.Model):
         messages = self.active_messages
         if len(messages) == 0:
             p = None
-            while p is None or p == self:
-                p = random_person()
-            msg = Message(origin=self,
-                          target=p,
-                          current_holder=self,
-                          )
-            msg.save()
+            for i in range(10):
+                p = random_person(age=180)
+                if p == self:
+                    p = None
+                if p is None:
+                    continue
+                break
+            if p:
+                msg = Message(origin=self,
+                              target=p,
+                              current_holder=self,
+                              )
+                msg.save()
 
     @property
     def active_messages(self):
